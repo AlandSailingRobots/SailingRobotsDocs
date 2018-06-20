@@ -1,11 +1,19 @@
 # How to run and update sdcard images in an ARM emulator on Arch Linux
 
-## Installing the software needed for emulation
+## Installing all software needed for emulation
 
-Install the following (together with dependecies) from the AUR
+Install the following (together with dependecies) from the [AUR](https://wiki.archlinux.org/index.php/Arch_User_Repository#Installing_packages)
 
 * [binfmt-support-git](https://aur.archlinux.org/packages/binfmt-support-git/)
 * [binfmt-qemu-static](https://aur.archlinux.org/packages/binfmt-qemu-static/)
+* [qemu-arm-static](https://aur.archlinux.org/packages/qemu-arm-static/)
+* [multipath-tools](https://aur.archlinux.org/packages/multipath-tools/)
+
+Example (using [yaourt](https://aur.archlinux.org/packages/yaourt/) but you could go with [pakku](https://aur.archlinux.org/packages/pakku/), [pacaur](https://aur.archlinux.org/packages/pacaur/), [naaman](https://aur.archlinux.org/packages/naaman/) or whatever):
+
+```console
+$ yaourt -S --noconfirm --needed binfmt-support-git binfmt-qemu-static qemu-arm-static multipath-tools
+```
 
 Install scripts and update using:
 ```console
@@ -22,15 +30,18 @@ There is a document on how to backup and clone SD-cards to images inside compres
 
 * You should probably make yourself a working directory and chdir into it, example: `mkdir virtual-archlinux-rpi; cd virtual-archlinux-rpi
 * Download the image.sqf (for example "2018-06-15-post-Albanus.sqf")
-* Create a mountpoint directory, example: `mkdir sqfmnt`
-* Mount the SQF container with `sudo mount image.sqf`
-* Copy out the raw sdcard clone, example: `cp -v sqfmnt/sdcard.dd` sdcard.dd`
+* Create a mountpoint directory, mount the SQF container and copy out the actual raw image from inside the container, example:
+
+```console
+$ mkdir sqfmnt
+$ sudo mount image.sqf sqfmnt
+$ cp -v sqfmnt/sdcard.dd sdcard.dd
+```
 
 ## Mounting the raw binary diskimage
 
 ## Set up loop devices pointing to partitions inside the raw diskimage
 
-* If needed, get the command *kpartx* by installing [multipath-tools](https://aur.archlinux.org/packages/multipath-tools/) from the [AUR](https://wiki.archlinux.org/index.php/Arch_User_Repository#Installing_packages)
 * Create loop devices using *kpartx* on the disk image like in the following example:
 
 ```console
@@ -45,6 +56,12 @@ add map loop0p2 (254:1): 0 30242816 linear 7:0 206848
 ```console
 $ sudo mount /dev/mapper/loop0p2 archlinux-rpi
 $ sudo mount /dev/mapper/loop0p1 archlinux-rpi/boot
+```
+
+## Copy the statically linked emulator binary into the mounted filesystem
+
+```
+$ sudo cp /usr/bin/qemu-arm-static archlinux-rpi/usr/bin
 ```
 
 ## Chroot inside the mountpoint using ARM emulation
